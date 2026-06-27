@@ -5,12 +5,12 @@
 #include <stdint.h>
 
 typedef union{
-    int64_t d[2];
+    float d[4];
     struct{
-        int32_t x;
-        int32_t y;
-        int32_t z;
-        int32_t a;
+        float x;
+        float y;
+        float z;
+        float a;
     };
 }VEC3;
 
@@ -20,5 +20,7 @@ float VEC3_length(const VEC3 *v3);
 float VEC3_length_sq(const VEC3 *v3);
 VEC3 VEC3_add(VEC3 *a, VEC3 *b);
 VEC3 VEC3_scale(float t, VEC3* v3);
+VEC3 VEC3_unit(VEC3* v);
+VEC3 VEC3_lerp(const VEC3 *src, const VEC3 *dest, float t);
 
 #endif

@@ -4,7 +4,7 @@
 
 inline void VEC3_print(VEC3 *v3)
 {
-    printf("<%d,%d,%d,%d>", v3->x, v3->y, v3->z, v3->a);
+    printf("<%f,%f,%f,%f>", v3->x, v3->y, v3->z, v3->a);
 }
 
 inline float VEC3_length(const VEC3 *v3)
@@ -40,4 +40,24 @@ inline VEC3 VEC3_scale(float t, VEC3* v3)
     res.z = v3->z * t;
 
     return res;
+}
+
+inline VEC3 VEC3_unit(VEC3* v)
+{
+    VEC3 res;
+    res.x /= VEC3_length(v);
+    res.y /= VEC3_length(v);
+    res.z /= VEC3_length(v);
+
+    return res;
+}
+
+inline VEC3 VEC3_lerp(const VEC3 *src, const VEC3 *dest, float t)
+{
+
+            VEC3 tmp_a  = VEC3_scale(1.0f - t, src);
+            VEC3 tmp_b  = VEC3_scale(t, dest);
+            VEC3 result = VEC3_add(&tmp_a, &tmp_b);
+
+            return result;
 }
