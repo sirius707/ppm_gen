@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1782563671 source:i:\mostafa\sessions\ppmgen\math\vec.c
+	"vec.h"
+	<stdio.h>
+	<math.h>
+
+1782563450 i:\mostafa\sessions\ppmgen\math\vec.h
+	<stdint.h>
+
+1782374035 source:i:\mostafa\sessions\ppmgen\sun.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<math.h>
+
+1782374035 source:i:\mostafa\sessions\ppmgen\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<math.h>
+
