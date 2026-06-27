@@ -94,27 +94,19 @@ int main()
             tmp_h = VEC3_scale(u, &horizontal);
             tmp_v = VEC3_scale(v, &vertical);
 
-
             dir = VEC3_add(&lower_left, &tmp_h);
             dir = VEC3_add(&dir, &tmp_v);
 
             unit_dir = VEC3_unit(&dir);
 
             float t = 0.5 * (unit_dir.y + 1.0f);
-            tmp_h  = VEC3_scale(1.0f - t, &white);
-            tmp_v  = VEC3_scale(t, &blue);
-            color = VEC3_add(&tmp_h, &tmp_v);
             color = VEC3_lerp(&white, &blue, t);
 
             int ir =  (int)(color.x * 255.99);
             int ig =  (int)(color.y * 255.99);
             int ib =  (int)(color.z * 255.99);
-			//r = (double)  distance/radius;
-			//g = (double)  distance/radius;
-			//b = (double)  distance/radius;
 
-			//fprintf(stderr, "%f\n", r);
-			PINT((int)(color.x * 255.99));PINT((int)(color.y * 255.99));PINT((int)(color.z * 255.99));NL;
+			PINT(ir);PINT(ig);PINT(ib);NL;
 
 		}
 	}
