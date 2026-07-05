@@ -8,6 +8,7 @@
 
 #define PINT(x) printf("%u\t", x)
 #define NL puts("")
+#define N_SPHERES 8
 
 typedef struct{
     VEC3; //dimensions + radius
@@ -46,7 +47,7 @@ bool trace_circle(VEC3 const *org, VEC3 const *end, VEC3 const *sphere, float t_
         if(temp > t_min && temp < t_max){
             record->t = temp;
             record->point = VEC3_ray_at(org, end, temp);
-            record->normal = VEC3_sub(&(record->point), &sphere);
+            record->normal = VEC3_sub(&(record->point), sphere);
             record->normal = VEC3_scale(1/sphere->a, &(record->normal));
 
 
@@ -58,7 +59,7 @@ bool trace_circle(VEC3 const *org, VEC3 const *end, VEC3 const *sphere, float t_
         if(temp > t_min && temp < t_max){
             record->t = temp;
             record->point = VEC3_ray_at(org, end, temp);
-            record->normal = VEC3_sub(&(record->point), &sphere);
+            record->normal = VEC3_sub(&(record->point), sphere);
             record->normal = VEC3_scale(1.0/(sphere->a), &(record->normal));
 
 
@@ -71,6 +72,23 @@ bool trace_circle(VEC3 const *org, VEC3 const *end, VEC3 const *sphere, float t_
 
 }
 
+
+bool draw_spheres(VEC3 const *org, VEC3 const *end, VEC3 const spheres[], float t_min, float t_max, HIT_INFO *record)
+{
+    HIT_INFO temp_record;
+    float closest_t = t_max;
+    bool bHit = false;
+
+    for(int k = N_SPHERES-1; k >= 0; k--){
+        if(trace_circle(org, end, &spheres[k], t_min, closest_t, &temp_record)){
+            bHit = true;
+            closest_t = temp_record.t;
+            *record = temp_record;
+        }
+    }
+
+    return bHit;
+}
 void print_sky()
 {
 	puts("255 255");
@@ -92,8 +110,8 @@ int main()
 	int  depth;
 	float radius;
 
-	w = 400;
-	h = 200;
+	w = 800;
+	h = 400;
 	depth = 255;
 
 	r = 0;
@@ -147,7 +165,6 @@ int main()
     VEC3 tmp_v;
     VEC3 dir = {.x = 0.0, .y = 0.0, .z = 0.0};
 
-    #define N_SPHERES 8
     VEC3 sphere[N_SPHERES];
 
     sphere[0].x = 0;
@@ -226,19 +243,12 @@ int main()
             int ig =  (int)(color.y * 255.99);
             int ib =  (int)(color.z * 255.99);
 
-            for(int k = 2-1; k >= 0; k--){
+            HIT_INFO record;
+            bool bDraw_sphere = draw_spheres(&origin, &dir, sphere, 0.01, FLT_MAX, &record);
 
-                HIT_INFO record;
-                bool bDraw_sphere = trace_circle(&origin, &dir, &sphere[k], 0.01, 10000000000000.0, &record);
-
-                if(bDraw_sphere){
+            if(bDraw_sphere){
 
                     VEC3 normal;
-                    VEC3 at_t;
-
-                    VEC3 other = VEC3_CON(0, 0, -1);
-                    at_t = record.point;
-
                     normal = record.normal;
 
                     normal.x += 1.0;
@@ -247,7 +257,6 @@ int main()
 
                     normal = VEC3_scale(0.5, &normal);
 
-                    VEC3_print(&normal);
 
                     // PINT(ir);PINT(ig);PINT(ib);NL;
                     ir =  (int)(normal.x * 255.99);
@@ -255,8 +264,8 @@ int main()
                     ib =  (int)(normal.z * 255.99);
 
 
-                }
             }
+
 
 
             PINT(ir);PINT(ig);PINT(ib);NL;

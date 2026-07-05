@@ -22,7 +22,7 @@ inline float VEC3_length_sq(const VEC3 *v3)
      return (v3->x * v3->x + v3->y * v3->y + v3->z * v3->z);
 }
 
-inline VEC3 VEC3_add(VEC3 *a, VEC3 *b)
+inline VEC3 VEC3_add(VEC3 const *a, VEC3 const *b)
 {
     VEC3 res;
     res.x = a->x + b->x;
@@ -33,7 +33,7 @@ inline VEC3 VEC3_add(VEC3 *a, VEC3 *b)
 }
 
 
-inline VEC3 VEC3_sub(VEC3 *a, VEC3 *b)
+inline VEC3 VEC3_sub( VEC3 const *a, VEC3 const *b)
 {
     VEC3 res;
     res.x = a->x - b->x;
@@ -43,7 +43,7 @@ inline VEC3 VEC3_sub(VEC3 *a, VEC3 *b)
     return res;
 }
 
-inline VEC3 VEC3_scale(float t, VEC3* v3)
+inline VEC3 VEC3_scale(float t, const VEC3* v3)
 {
     VEC3 res;
     res.x = v3->x * t;
@@ -69,7 +69,7 @@ inline float VEC3_dot(VEC3 const *a, VEC3 const *b)
 // seemingly unrelated bug in main
 // calling trace_sphere even tho it modified nothing
 // changed the final ppm
-inline VEC3 VEC3_unit(VEC3* v)
+inline VEC3 VEC3_unit(VEC3 const * v)
 {
     VEC3 res;
     res.x = v->x / VEC3_length(v);
