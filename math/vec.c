@@ -32,6 +32,17 @@ inline VEC3 VEC3_add(VEC3 *a, VEC3 *b)
     return res;
 }
 
+
+inline VEC3 VEC3_sub(VEC3 *a, VEC3 *b)
+{
+    VEC3 res;
+    res.x = a->x - b->x;
+    res.y = a->y - b->y;
+    res.z = a->z - b->z;
+
+    return res;
+}
+
 inline VEC3 VEC3_scale(float t, VEC3* v3)
 {
     VEC3 res;
@@ -42,12 +53,29 @@ inline VEC3 VEC3_scale(float t, VEC3* v3)
     return res;
 }
 
+inline float VEC3_dot(VEC3 const *a, VEC3 const *b)
+{
+    float res;
+    res = a->x * b->x +
+          a->y * b->y +
+          a->z * b->z;
+
+    return res;
+}
+
+// i forgot to initialize res here
+// i was returning res/= vec_length
+// this is undefined behaviour and it cause
+// seemingly unrelated bug in main
+// calling trace_sphere even tho it modified nothing
+// changed the final ppm
 inline VEC3 VEC3_unit(VEC3* v)
 {
     VEC3 res;
-    res.x /= VEC3_length(v);
-    res.y /= VEC3_length(v);
-    res.z /= VEC3_length(v);
+    res.x = v->x / VEC3_length(v);
+    res.y = v->y / VEC3_length(v);
+    res.z = v->z / VEC3_length(v);
+    res.a = 0;
 
     return res;
 }
@@ -60,4 +88,28 @@ inline VEC3 VEC3_lerp(const VEC3 *src, const VEC3 *dest, float t)
             VEC3 result = VEC3_add(&tmp_a, &tmp_b);
 
             return result;
+}
+
+
+inline VEC3 VEC3_cross(const VEC3 *a, const VEC3 *b)
+{
+
+            VEC3 res;
+
+            res.x = a->y * b->z - a->z * b->y;
+            res.y = a->x * b->z - a->z * b->x;
+            res.z = a->x * b->y - a->y * b->x;
+
+            return res;
+}
+
+inline VEC3 VEC3_ray_at(const VEC3 *origin, const VEC3 *dir, const float t)
+{
+                VEC3 scaled_dir;
+                VEC3 at_result;
+
+                scaled_dir = VEC3_scale(t, dir);
+                at_result = VEC3_add(origin, &scaled_dir);
+
+                return at_result;
 }
