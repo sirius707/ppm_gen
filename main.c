@@ -3,6 +3,8 @@
 #include <time.h>
 #include <math.h>
 #include "math/vec.h"
+#include <float.h>
+#include <stdbool.h>
 
 #define PINT(x) printf("%u\t", x)
 #define NL puts("")
@@ -17,7 +19,7 @@ typedef struct{
     VEC3 normal;
 }HIT_INFO;
 
-float trace_circle(VEC3 const *org, VEC3 const *end, VEC3 const *sphere, float t_min, float t_max, HIT_INFO *record)
+bool trace_circle(VEC3 const *org, VEC3 const *end, VEC3 const *sphere, float t_min, float t_max, HIT_INFO *record)
 {
 
     float a, b, c;
@@ -29,40 +31,43 @@ float trace_circle(VEC3 const *org, VEC3 const *end, VEC3 const *sphere, float t
 
 
     //b = -2 * ((end->x - org->x) * (sphere->x - org->x) +(end->y - org->y) * (sphere->y - org->y) +(sphere->z - org->z) * (end->z - org->z));
-    b = 2 * (VEC3_dot(&oc, end));
+    b = (VEC3_dot(&oc, end));
 
     //c = (sphere->x - org->x) * (sphere->x - org->x) + (sphere->y - org->y) * (sphere->y - org->y) + (sphere->z - org->z) * (sphere->z - org->z) - sphere->a * sphere->a;
     c = VEC3_dot(&oc, &oc) - sphere->a * sphere->a;
 
     float discriminant = 0;
     float temp;
-    discriminant = b*b - 4 * a * c;
+    discriminant = b*b -  a * c;
 
 
-    if(discriminant < 0){
-            return -1;
-    }else{
-        temp = ((-b - sqrt(discriminant))/(2*a));
+    if(discriminant > 0){
+        temp = (-b - sqrt(discriminant))/(a);
         if(temp > t_min && temp < t_max){
             record->t = temp;
             record->point = VEC3_ray_at(org, end, temp);
             record->normal = VEC3_sub(&(record->point), &sphere);
             record->normal = VEC3_scale(1/sphere->a, &(record->normal));
 
-            return temp;
+
+            return true;
         }
 
 
-        temp = ((-b + sqrt(discriminant))/(2*a));
+        temp = (-b + sqrt(discriminant))/(a);
         if(temp > t_min && temp < t_max){
             record->t = temp;
             record->point = VEC3_ray_at(org, end, temp);
             record->normal = VEC3_sub(&(record->point), &sphere);
-            record->normal = VEC3_scale(1/sphere->a, &(record->normal));
-            return temp;
+            record->normal = VEC3_scale(1.0/(sphere->a), &(record->normal));
+
+
+            return true;
         }
 
     }
+
+    return false;
 
 }
 
@@ -142,7 +147,7 @@ int main()
     VEC3 tmp_v;
     VEC3 dir = {.x = 0.0, .y = 0.0, .z = 0.0};
 
-    #define N_SPHERES 7
+    #define N_SPHERES 8
     VEC3 sphere[N_SPHERES];
 
     sphere[0].x = 0;
@@ -151,10 +156,10 @@ int main()
     sphere[0].a = 0.5;
 
 
-    sphere[1].x = -0.9;
-    sphere[1].y = -0.3;
-    sphere[1].z = -1;
-    sphere[1].a = 0.2;
+    sphere[7].x = -0.9;
+    sphere[7].y = -0.3;
+    sphere[7].z = -1;
+    sphere[7].a = 0.2;
 
 
     sphere[2].x = -0.9;
@@ -164,6 +169,11 @@ int main()
 
 
     sphere[3].x = -1.5;
+    sphere[6].x = 1.5;
+    sphere[6].y = 0;
+    sphere[6].z = -1;
+    sphere[6].a = 0.2;
+
     sphere[3].y = 0;
     sphere[3].z = -1;
     sphere[3].a = 0.2;
@@ -184,6 +194,12 @@ int main()
     sphere[6].y = 0;
     sphere[6].z = -1;
     sphere[6].a = 0.2;
+
+
+    sphere[1].x = 0;
+    sphere[1].y = -100.5;
+    sphere[1].z = -1;
+    sphere[1].a = 100;
 
     for(int j = h-1; j > 0; j--){
 		for(int i = 0; i < w; i++){
@@ -210,27 +226,30 @@ int main()
             int ig =  (int)(color.y * 255.99);
             int ib =  (int)(color.z * 255.99);
 
-            for(int k = N_SPHERES-1; k >= 0; k--){
+            for(int k = 2-1; k >= 0; k--){
 
                 HIT_INFO record;
-                float sphere_res = trace_circle(&origin, &dir, &sphere[k], 0, 1.0, &record);
-                VEC3 normal;
-                VEC3 at_t;
-                VEC3 other = VEC3_CON(0, 0, -1);
+                bool bDraw_sphere = trace_circle(&origin, &dir, &sphere[k], 0.01, 10000000000000.0, &record);
 
-                at_t = record.point;
+                if(bDraw_sphere){
 
-                normal = VEC3_sub(&at_t, &other);
+                    VEC3 normal;
+                    VEC3 at_t;
 
-                normal.x += 1;
-                normal.y += 1;
-                normal.z += 1;
+                    VEC3 other = VEC3_CON(0, 0, -1);
+                    at_t = record.point;
 
-                normal = VEC3_scale(0.5, &normal);
+                    normal = record.normal;
 
+                    normal.x += 1.0;
+                    normal.y += 1.0;
+                    normal.z += 1.0;
 
-                // PINT(ir);PINT(ig);PINT(ib);NL;
-                if(sphere_res > 0){
+                    normal = VEC3_scale(0.5, &normal);
+
+                    VEC3_print(&normal);
+
+                    // PINT(ir);PINT(ig);PINT(ib);NL;
                     ir =  (int)(normal.x * 255.99);
                     ig =  (int)(normal.y * 255.99);
                     ib =  (int)(normal.z * 255.99);

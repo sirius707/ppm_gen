@@ -4,7 +4,7 @@
 
 inline void VEC3_print(VEC3 *v3)
 {
-    printf("<%f,%f,%f,%f>", v3->x, v3->y, v3->z, v3->a);
+    fprintf(stderr, "<%f,%f,%f,%f>\n", v3->x, v3->y, v3->z, v3->a);
 }
 
 inline float VEC3_length(const VEC3 *v3)
