@@ -5,10 +5,24 @@
 #include "math/vec.h"
 #include <float.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define PINT(x) printf("%u\t", x)
 #define NL puts("")
 #define N_SPHERES 8
+
+typedef struct{
+    VEC3 lower_left;
+	VEC3 horizontal;
+	VEC3 vertical;
+	VEC3 origin;
+
+}CAM;
+
+
+VEC3 VEC3_ray_dir_for_cam(CAM *cam, float u, float v);
+
+
 
 typedef struct{
     VEC3; //dimensions + radius
@@ -110,8 +124,8 @@ int main()
 	int  depth;
 	float radius;
 
-	w = 800;
-	h = 400;
+	w = 400;
+	h = 200;
 	depth = 255;
 
 	r = 0;
@@ -152,11 +166,8 @@ int main()
 	}
 	*/
 
-	//print skybox
-	VEC3 lower_left ={.x = -2.0, .y = -1.0, .z = -1.0};
-	VEC3 horizontal ={.x =  4.0, .y = 0.0 , .z =  0.0};
-	VEC3 vertical  ={.x = 0.0, .y = 2.0 , .z =  0.0};
-	VEC3 origin ={.x = 0, .y = 0, .z = 0};
+
+    VEC3 light_src = {.x = 0.0, .y = 0.7, .z = -1.0};
 
     VEC3 white = {.x = 1.0, .y = 1.0, .z = 1.0};
     VEC3 blue = {.x = 0.5, .y = 0.7, .z = 1.0};
@@ -164,6 +175,8 @@ int main()
     VEC3 tmp_h;
     VEC3 tmp_v;
     VEC3 dir = {.x = 0.0, .y = 0.0, .z = 0.0};
+
+    CAM cam;
 
     VEC3 sphere[N_SPHERES];
 
@@ -181,7 +194,7 @@ int main()
 
     sphere[2].x = -0.9;
     sphere[2].y = 0.3;
-    sphere[2].z = -1;
+    sphere[2].z = 0.4;
     sphere[2].a = 0.2;
 
 
@@ -209,7 +222,7 @@ int main()
 
     sphere[6].x = 1.5;
     sphere[6].y = 0;
-    sphere[6].z = -1;
+    sphere[6].z = 0.1;
     sphere[6].a = 0.2;
 
 
@@ -218,60 +231,114 @@ int main()
     sphere[1].z = -1;
     sphere[1].a = 100;
 
+    memset(&cam, 0, sizeof(cam));
+    cam.lower_left =(VEC3){.x = -2.0, .y = -1.0, .z = -1.0};
+	cam.horizontal =(VEC3){.x =  4.0, .y = 0.0 , .z =  0.0};
+	cam.vertical   = (VEC3){.x = 0.0, .y = 2.0 , .z =  0.0};
+	cam.origin = (VEC3){.x = 0, .y = 0, .z = 0};
+
+    VEC3 origin = {.x = 0, .y = 0, .z = 0};
+    VEC3 prev_color =  {.x = 0, .y = 0, .z = 0};
+
+    bool bAA = true; // anti aliasing
+    int ns = 100;
+
     for(int j = h-1; j > 0; j--){
 		for(int i = 0; i < w; i++){
 
-            float u = (float)i/(w);
-            float v = (float)j/(h);
+
             VEC3 unit_dir;
-            VEC3 color;
-
-            tmp_h = VEC3_scale(u, &horizontal);
-            tmp_v = VEC3_scale(v, &vertical);
-
-            dir = VEC3_add(&lower_left, &tmp_h);
-            dir = VEC3_add(&dir, &tmp_v);
+            VEC3 color = {.x = 0, .y = 0, .z = 0};
 
 
+            int ir;
+            int ig;
+            int ib;
 
-            unit_dir = VEC3_unit(&dir);
+            for(int s=0; s < ns; s++){
 
-            float t = 0.5 * (unit_dir.y + 1.0f);
-            color = VEC3_lerp(&white, &blue, t);
-
-            int ir =  (int)(color.x * 255.99);
-            int ig =  (int)(color.y * 255.99);
-            int ib =  (int)(color.z * 255.99);
-
-            HIT_INFO record;
-            bool bDraw_sphere = draw_spheres(&origin, &dir, sphere, 0.01, FLT_MAX, &record);
-
-            if(bDraw_sphere){
-
-                    VEC3 normal;
-                    normal = record.normal;
-
-                    normal.x += 1.0;
-                    normal.y += 1.0;
-                    normal.z += 1.0;
-
-                    normal = VEC3_scale(0.5, &normal);
+                float u = ((float)i + ((float)(rand()%1000))/1000.0)/(w);
+                float v = ((float)j + ((float)(rand()%1000))/1000.0)/(h);
 
 
-                    // PINT(ir);PINT(ig);PINT(ib);NL;
-                    ir =  (int)(normal.x * 255.99);
-                    ig =  (int)(normal.y * 255.99);
-                    ib =  (int)(normal.z * 255.99);
+                VEC3 dir  = VEC3_ray_dir_for_cam(&cam, u, v);
+                unit_dir = VEC3_unit(&dir);
 
 
+
+                HIT_INFO record;
+                bool bDraw_sphere = draw_spheres(&cam.origin, &dir, sphere, 0.01, FLT_MAX, &record);
+
+                if(bDraw_sphere){
+
+                        VEC3 normal;
+                        normal = record.normal;
+
+                        normal.x += 1.0;
+                        normal.y += 1.0;
+                        normal.z += 1.0;
+
+                        normal = VEC3_scale(0.5, &normal);
+
+
+                        float distance;
+                        VEC3 diff = VEC3_sub(&record.point, &light_src);
+                        distance = VEC3_length(&diff) + 0.0001;
+
+
+                        //color.x = normal.x;
+                        //color.y = normal.y;
+                        //color.z = normal.z;
+                        color = VEC3_add(&color, &normal);
+                        //apply light source
+                        //ir *= 1.0/distance ;
+                        //ig *= 1.0/distance ;
+                        //ib *= 1.0/distance ;
+
+
+
+                }else{
+                    float t = 0.5 * (unit_dir.y + 1.0f);
+                    VEC3 tmp = VEC3_lerp(&white, &blue, t);
+                    color = VEC3_add(&tmp, &color);
+
+                }
             }
 
+                color = VEC3_scale(1.0/ns, &color);
 
+            //this is blur lol
+            //color = VEC3_add(&color, &prev_color);
+            //color = VEC3_scale(0.2, &color);
+
+            ir =  (int)(color.x * 255.99);
+            ig =  (int)(color.y * 255.99);
+            ib =  (int)(color.z * 255.99);
 
             PINT(ir);PINT(ig);PINT(ib);NL;
-
+            //prev_color = color;
 
 
 		}
 	}
+}
+
+
+inline VEC3 VEC3_ray_dir_for_cam(CAM *cam, float u, float v)
+{
+
+            VEC3 tmp_h;
+            VEC3 tmp_v;
+            VEC3 dir = {.x = 0.0, .y = 0.0, .z = 0.0};
+            VEC3 unit_dir;
+
+            tmp_h = VEC3_scale(u, &cam->horizontal);
+            tmp_v = VEC3_scale(v, &cam->vertical);
+
+            dir = VEC3_add(&cam->lower_left, &tmp_h);
+            dir = VEC3_add(&dir, &tmp_v);
+
+
+
+            return dir;
 }
