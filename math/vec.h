@@ -26,6 +26,7 @@ VEC3 VEC3_scale(float t, const VEC3* v3);
 VEC3 VEC3_unit(VEC3 const *v);
 VEC3 VEC3_lerp(const VEC3 *src, const VEC3 *dest, float t);
 VEC3 VEC3_ray_at(const VEC3 *orign, const VEC3 *dir, const float t);
+VEC3 VEC3_random_point_in_unit();
 
 #define VEC3_CON(X, Y, Z) ((VEC3){.x = X, .y = Y, .z = Z})
 #endif

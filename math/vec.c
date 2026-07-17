@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <math.h>
 
+static float drand(int resolution)
+{
+    return ((float)(rand()%resolution))/resolution;
+}
+
 inline void VEC3_print(VEC3 *v3)
 {
     fprintf(stderr, "<%f,%f,%f,%f>\n", v3->x, v3->y, v3->z, v3->a);
@@ -112,4 +117,20 @@ inline VEC3 VEC3_ray_at(const VEC3 *origin, const VEC3 *dir, const float t)
                 at_result = VEC3_add(origin, &scaled_dir);
 
                 return at_result;
+}
+
+
+VEC3 VEC3_random_point_in_unit()
+{
+    VEC3 p;
+    VEC3 one = {1,1,1,1};
+    do{
+
+        p = (VEC3){.x = drand(1000), .y = drand(1000), .z = drand(1000)};
+        p = VEC3_scale(2.0, &p);
+        p = VEC3_sub(&p, &one);
+
+    }while(VEC3_length_sq(&p) > 1);
+
+    return p;
 }

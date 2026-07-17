@@ -20,13 +20,6 @@ typedef struct{
 }CAM;
 
 
-VEC3 VEC3_ray_dir_for_cam(CAM *cam, float u, float v);
-
-float drand(int resolution)
-{
-    return ((float)(rand()%resolution))/resolution;
-}
-
 typedef struct{
     VEC3; //dimensions + radius
 }SPHERE;
@@ -36,6 +29,18 @@ typedef struct{
     VEC3 point;
     VEC3 normal;
 }HIT_INFO;
+
+
+
+VEC3 get_color(VEC3 *ray_dir, VEC3 spheres[], CAM *cam);
+
+VEC3 VEC3_ray_dir_for_cam(CAM *cam, float u, float v);
+
+float drand(int resolution)
+{
+    return ((float)(rand()%resolution))/resolution;
+}
+
 
 bool trace_circle(VEC3 const *org, VEC3 const *end, VEC3 const *sphere, float t_min, float t_max, HIT_INFO *record)
 {
@@ -244,7 +249,7 @@ int main()
     VEC3 prev_color =  {.x = 0, .y = 0, .z = 0};
 
     bool bAA = true; // anti aliasing
-    int ns = 0;
+    int ns = 1;
 
     if(bAA) ns = 100;
     for(int j = h-1; j > 0; j--){
@@ -261,37 +266,19 @@ int main()
 
             for(int s=0; s < ns; s++){
 
-                float u = ((float)i + drand(1000.0))/w * bAA;
-                float v = ((float)j + drand(1000.0))/h * bAA;
+                float u = ((float)i + drand(1000.0) * bAA)/w;
+                float v = ((float)j + drand(1000.0) * bAA)/h;
 
+                VEC3 tmp_color = {0,0,0,0};
 
                 VEC3 dir  = VEC3_ray_dir_for_cam(&cam, u, v);
                 unit_dir = VEC3_unit(&dir);
 
 
 
-                HIT_INFO record;
-                bool bDraw_sphere = draw_spheres(&cam.origin, &dir, sphere, 0.01, FLT_MAX, &record);
+                tmp_color = get_color(&dir, sphere, &cam);
 
-                if(bDraw_sphere){
-
-                        VEC3 normal;
-                        normal = record.normal;
-
-                        normal.x += 1.0;
-                        normal.y += 1.0;
-                        normal.z += 1.0;
-
-                        normal = VEC3_scale(0.5, &normal);
-                        color = VEC3_add(&color, &normal);
-
-                }else{
-
-                    float t = 0.5 * (unit_dir.y + 1.0f);
-                    VEC3 tmp = VEC3_lerp(&white, &blue, t);
-                    color = VEC3_add(&tmp, &color);
-
-                }
+                color = VEC3_add(&color, &tmp_color);
             }
 
             color = VEC3_scale(1.0/ns, &color);
@@ -327,3 +314,46 @@ inline VEC3 VEC3_ray_dir_for_cam(CAM *cam, float u, float v)
 
             return dir;
 }
+
+
+
+VEC3 get_color(VEC3 *ray_dir, VEC3 spheres[], CAM *cam)
+{
+                VEC3 white = {.x = 1.0, .y = 1.0, .z = 1.0};
+                VEC3 blue = {.x = 0.5, .y = 0.7, .z = 1.0};
+
+
+                HIT_INFO record;
+				VEC3 color;
+                bool bDraw_sphere = draw_spheres(&(cam->origin), ray_dir, spheres, 0.01, FLT_MAX, &record);
+
+                if(bDraw_sphere){
+
+                        VEC3 normal;
+                        VEC3 target;
+						VEC3 new_ray;
+
+                        normal = record.normal;
+
+                        target = VEC3_random_point_in_unit();
+                        target = VEC3_add(&target, &record.point);
+                        target = VEC3_add(&target, &normal);
+
+						new_ray = VEC3_sub(&target, &record.point);
+						color = get_color(&new_ray, spheres, cam);
+                        return VEC3_scale(0.5, &color);
+
+                }else{
+					float t;
+					VEC3 unit_dir = VEC3_unit(ray_dir);
+
+					t = 0.5 * (unit_dir.y + 1.0f);
+                    VEC3 tmp = VEC3_lerp(&white, &blue, t);
+                    color = VEC3_add(&tmp, &color);
+
+					return color;
+                }
+
+
+}
+
