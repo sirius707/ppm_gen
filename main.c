@@ -22,7 +22,10 @@ typedef struct{
 
 VEC3 VEC3_ray_dir_for_cam(CAM *cam, float u, float v);
 
-
+float drand(int resolution)
+{
+    return ((float)(rand()%resolution))/resolution;
+}
 
 typedef struct{
     VEC3; //dimensions + radius
@@ -241,8 +244,9 @@ int main()
     VEC3 prev_color =  {.x = 0, .y = 0, .z = 0};
 
     bool bAA = true; // anti aliasing
-    int ns = 100;
+    int ns = 0;
 
+    if(bAA) ns = 100;
     for(int j = h-1; j > 0; j--){
 		for(int i = 0; i < w; i++){
 
@@ -257,8 +261,8 @@ int main()
 
             for(int s=0; s < ns; s++){
 
-                float u = ((float)i + ((float)(rand()%1000))/1000.0)/(w);
-                float v = ((float)j + ((float)(rand()%1000))/1000.0)/(h);
+                float u = ((float)i + drand(1000.0))/w * bAA;
+                float v = ((float)j + drand(1000.0))/h * bAA;
 
 
                 VEC3 dir  = VEC3_ray_dir_for_cam(&cam, u, v);
@@ -279,25 +283,10 @@ int main()
                         normal.z += 1.0;
 
                         normal = VEC3_scale(0.5, &normal);
-
-
-                        float distance;
-                        VEC3 diff = VEC3_sub(&record.point, &light_src);
-                        distance = VEC3_length(&diff) + 0.0001;
-
-
-                        //color.x = normal.x;
-                        //color.y = normal.y;
-                        //color.z = normal.z;
                         color = VEC3_add(&color, &normal);
-                        //apply light source
-                        //ir *= 1.0/distance ;
-                        //ig *= 1.0/distance ;
-                        //ib *= 1.0/distance ;
-
-
 
                 }else{
+
                     float t = 0.5 * (unit_dir.y + 1.0f);
                     VEC3 tmp = VEC3_lerp(&white, &blue, t);
                     color = VEC3_add(&tmp, &color);
@@ -305,11 +294,7 @@ int main()
                 }
             }
 
-                color = VEC3_scale(1.0/ns, &color);
-
-            //this is blur lol
-            //color = VEC3_add(&color, &prev_color);
-            //color = VEC3_scale(0.2, &color);
+            color = VEC3_scale(1.0/ns, &color);
 
             ir =  (int)(color.x * 255.99);
             ig =  (int)(color.y * 255.99);
